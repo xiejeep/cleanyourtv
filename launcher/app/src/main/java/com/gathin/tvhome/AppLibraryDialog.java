@@ -506,6 +506,7 @@ final class AppLibraryDialog {
     }
 
     private void open(ResolveInfo app) {
+        if (!ScreenTime.tryLaunch(activity, app.activityInfo.packageName, label(app), () -> open(app))) return;
         close();
         Intent intent = new Intent(Intent.ACTION_MAIN).setComponent(
                 new ComponentName(app.activityInfo.packageName, app.activityInfo.name));

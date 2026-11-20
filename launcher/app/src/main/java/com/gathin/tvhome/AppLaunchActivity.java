@@ -18,7 +18,9 @@ public class AppLaunchActivity extends Activity {
             if (pkg != null) {
                 Intent launch = getPackageManager().getLeanbackLaunchIntentForPackage(pkg);
                 if (launch == null) launch = getPackageManager().getLaunchIntentForPackage(pkg);
-                if (launch != null) startActivity(launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+                if (launch != null && ScreenTime.tryLaunch(this, pkg, pkg)) {
+                    startActivity(launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+                }
             }
         } catch (ActivityNotFoundException | SecurityException ignored) {
         } finally {

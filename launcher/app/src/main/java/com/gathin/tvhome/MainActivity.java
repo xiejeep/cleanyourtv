@@ -1091,6 +1091,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     protected void onResume() {
         super.onResume();
         resumed = true;
+        ScreenTime.onHomeResumed(this);
         // A festival that started or ended while Home was in the background: rebuild with or without it.
         if (festive != festival.active(LocalDate.now())) {
             recreate();
@@ -3867,17 +3868,27 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             if (LibraryApps.save(this, pkg, false)) reloadApps(false);
             else Toast.makeText(this, R.string.library_save_failed, Toast.LENGTH_LONG).show();
         });
+        String label = adapter.labelAt(position);
+        addSettingsMenuTextRow(rows, popup, ScreenTime.menuRowTitle(this, pkg),
+                () -> ScreenTime.showPinDialog(this, "请输入家长密码",
+                        "设置或解除「" + label + "」的时间限制",
+                        () -> showScreenTimeMenu(pkg, label, card)));
         // Some firmware has no App info page at all; a row that only toasts "can't open" helps nobody.
         Intent info = SystemSettings.appInfo(this, pkg);
         if (info != null) addSettingsMenuRow(rows, popup, R.string.library_app_info, () -> open(info));
+        showAnchoredPopup(popup, panel, card);
+        rows.getChildAt(0).requestFocus();
+    }
+
+    private void showAnchoredPopup(PopupWindow popup, View panel, View anchor) {
         panel.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
         popup.setWidth(Math.max((int) (200 * density), panel.getMeasuredWidth()));
         // Dock tiles sit near the bottom of the screen: open the menu above the tile when it would not fit below.
         int[] at = new int[2];
-        card.getLocationInWindow(at);
+        anchor.getLocationInWindow(at);
         int gap = (int) (10 * density), height = panel.getMeasuredHeight();
-        if (at[1] + card.getHeight() + gap + height <= root.getHeight()) {
-            dropIn(popup, panel, card, Gravity.START);
+        if (at[1] + anchor.getHeight() + gap + height <= root.getHeight()) {
+            dropIn(popup, panel, anchor, Gravity.START);
         } else {
             panel.setAlpha(0f);
             panel.setPivotY(height);
@@ -3887,10 +3898,50 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             panel.animate().alpha(1f).scaleY(1f).translationY(0f).setDuration(220)
                     .setInterpolator(new android.view.animation.DecelerateInterpolator(1.6f)).start();
         }
-        rows.getChildAt(0).requestFocus();
+    }
+
+    private void showScreenTimeMenu(String pkg, String label, View anchor) {
+        View panel = getLayoutInflater().inflate(R.layout.popup_inputs, root, false);
+        LinearLayout rows = panel.findViewById(R.id.rows);
+        PopupWindow popup = glassPopup(panel, (int) (220 * density));
+        int current = ScreenTime.getLimitSeconds(this, pkg);
+        int focusIndex = 0;
+        for (int i = 0; i < ScreenTime.PRESET_SECONDS.length; i++) {
+            int seconds = ScreenTime.PRESET_SECONDS[i];
+            if (seconds == current) focusIndex = i;
+            String title = (seconds == current ? "\u2713 " : "") + ScreenTime.optionLabel(seconds);
+            addSettingsMenuTextRow(rows, popup, title, () -> {
+                ScreenTime.setLimitSeconds(this, pkg, seconds);
+                Toast.makeText(this, label + " \u00B7 " + ScreenTime.optionLabel(seconds), Toast.LENGTH_SHORT).show();
+            });
+        }
+        if (ScreenTime.getUsedMs(this, pkg) > 0 || current > 0) {
+            addSettingsMenuTextRow(rows, popup, "重置今日计时", () -> {
+                ScreenTime.resetToday(this, pkg);
+                Toast.makeText(this, label + ": 已重置今日计时", Toast.LENGTH_SHORT).show();
+            });
+        }
+        addSettingsMenuTextRow(rows, popup, "配置围棋闯关地址", () -> ScreenTime.showGoUrlDialog(this));
+        addSettingsMenuTextRow(rows, popup,
+                ScreenTime.isTotpEnabled(this) ? "动态口令 (TOTP): 已开启 (点击关闭)" : "开启动态口令 (防偷看)",
+                () -> {
+                    if (ScreenTime.isTotpEnabled(this)) {
+                        ScreenTime.setTotpEnabled(this, false);
+                        Toast.makeText(this, "已关闭动态口令，恢复 4 位静态密码", Toast.LENGTH_SHORT).show();
+                    } else {
+                        ScreenTime.showTotpSetupDialog(this);
+                    }
+                });
+        addSettingsMenuTextRow(rows, popup, "修改家长密码", () -> ScreenTime.showChangePinDialog(this));
+        showAnchoredPopup(popup, panel, anchor.isAttachedToWindow() ? anchor : root);
+        rows.getChildAt(focusIndex).requestFocus();
     }
 
     private void addSettingsMenuRow(LinearLayout rows, PopupWindow popup, int title, Runnable action) {
+        addSettingsMenuTextRow(rows, popup, getString(title), action);
+    }
+
+    private void addSettingsMenuTextRow(LinearLayout rows, PopupWindow popup, String title, Runnable action) {
         View row = getLayoutInflater().inflate(R.layout.item_input, rows, false);
         row.findViewById(R.id.icon).setVisibility(View.GONE);
         row.findViewById(R.id.dot).setVisibility(View.GONE);

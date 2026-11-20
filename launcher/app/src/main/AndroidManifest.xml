@@ -9,6 +9,7 @@
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
     <!-- Needed since Android 10 to read the Wi-Fi network name for the network pill. Never requested at
          runtime: build-and-install grants it with pm grant, so lint's Android 12 "ask for COARSE with
          FINE" rule does not apply here. -->
@@ -18,6 +19,11 @@
          list (ServiceRepair). Granted with pm grant by build-and-install when a helper is enabled. -->
     <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS"
         tools:ignore="ProtectedPermissions" />
+    <!-- Screen time limits: allows returning Home from background when an app's daily time limit expires. -->
+    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS"
+        tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES" />
     <!-- YaOS (Yandex TV OS): HDMI, AV and the tuner all play in com.yandex.tv.live, whose activities require
          this permission (protection level normal, so it is granted at install). Ignored on other TVs. -->
     <uses-permission android:name="yandex.tv.permission.ACCESS_TV_SOURCE" />
@@ -76,6 +82,7 @@
         android:banner="@drawable/banner"
         android:theme="@style/Theme.TvHome"
         android:allowBackup="false"
+        android:usesCleartextTraffic="true"
         android:localeConfig="@xml/locales_config">
 
         <activity
@@ -178,6 +185,14 @@
         </activity>
 
         <!-- The same clock, started by Home itself after home_idle_clock_minutes without input. -->
+        <activity
+            android:name=".GoUnlockActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:configChanges="orientation|screenSize|keyboard|keyboardHidden|uiMode"
+            android:screenOrientation="landscape"
+            android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen" />
+
         <activity
             android:name=".ClockActivity"
             android:exported="false"
