@@ -3906,52 +3906,90 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private void showScreenTimeMenu(String pkg, String label, View anchor) {
         View panel = getLayoutInflater().inflate(R.layout.popup_inputs, root, false);
         LinearLayout rows = panel.findViewById(R.id.rows);
-        PopupWindow popup = glassPopup(panel, (int) (220 * density));
+        PopupWindow popup = glassPopup(panel, (int) (240 * density));
         int current = ScreenTime.getLimitSeconds(this, pkg);
-        int focusIndex = 0;
+        int initialFocus = 0;
         for (int i = 0; i < ScreenTime.PRESET_SECONDS.length; i++) {
+            if (ScreenTime.PRESET_SECONDS[i] == current) {
+                initialFocus = i;
+                break;
+            }
+        }
+        populateScreenTimeRows(rows, popup, pkg, label, initialFocus);
+        showAnchoredPopup(popup, panel, anchor.isAttachedToWindow() ? anchor : root);
+        if (rows.getChildCount() > initialFocus) {
+            rows.getChildAt(initialFocus).requestFocus();
+        }
+    }
+
+    private void populateScreenTimeRows(LinearLayout rows, PopupWindow popup, String pkg, String label, int focusIndex) {
+        rows.removeAllViews();
+        int current = ScreenTime.getLimitSeconds(this, pkg);
+        for (int i = 0; i < ScreenTime.PRESET_SECONDS.length; i++) {
+            final int idx = i;
             int seconds = ScreenTime.PRESET_SECONDS[i];
-            if (seconds == current) focusIndex = i;
             String title = (seconds == current ? "\u2713 " : "") + ScreenTime.optionLabel(seconds);
-            addSettingsMenuTextRow(rows, popup, title, () -> {
+            addSettingsMenuTextRow(rows, popup, title, false, () -> {
                 ScreenTime.setLimitSeconds(this, pkg, seconds);
                 Toast.makeText(this, label + " \u00B7 " + ScreenTime.optionLabel(seconds), Toast.LENGTH_SHORT).show();
+                populateScreenTimeRows(rows, popup, pkg, label, idx);
             });
         }
         if (ScreenTime.getUsedMs(this, pkg) > 0 || current > 0) {
-            addSettingsMenuTextRow(rows, popup, "重置今日计时", () -> {
+            final int resetIdx = rows.getChildCount();
+            addSettingsMenuTextRow(rows, popup, "重置今日计时", false, () -> {
                 ScreenTime.resetToday(this, pkg);
                 Toast.makeText(this, label + ": 已重置今日计时", Toast.LENGTH_SHORT).show();
+                populateScreenTimeRows(rows, popup, pkg, label, Math.min(resetIdx, rows.getChildCount() - 1));
             });
         }
-        addSettingsMenuTextRow(rows, popup, "配置围棋闯关地址", () -> ScreenTime.showGoUrlDialog(this));
+        final int goIdx = rows.getChildCount();
+        addSettingsMenuTextRow(rows, popup, "配置围棋闯关地址", false, () -> {
+            ScreenTime.showGoUrlDialog(this);
+            populateScreenTimeRows(rows, popup, pkg, label, goIdx);
+        });
+        final int totpIdx = rows.getChildCount();
         addSettingsMenuTextRow(rows, popup,
                 ScreenTime.isTotpEnabled(this) ? "动态口令 (TOTP): 已开启 (点击关闭)" : "开启动态口令 (防偷看)",
+                false,
                 () -> {
                     if (ScreenTime.isTotpEnabled(this)) {
                         ScreenTime.setTotpEnabled(this, false);
                         Toast.makeText(this, "已关闭动态口令，恢复 4 位静态密码", Toast.LENGTH_SHORT).show();
+                        populateScreenTimeRows(rows, popup, pkg, label, totpIdx);
                     } else {
                         ScreenTime.showTotpSetupDialog(this);
+                        populateScreenTimeRows(rows, popup, pkg, label, totpIdx);
                     }
                 });
-        addSettingsMenuTextRow(rows, popup, "修改家长密码", () -> ScreenTime.showChangePinDialog(this));
-        showAnchoredPopup(popup, panel, anchor.isAttachedToWindow() ? anchor : root);
-        rows.getChildAt(focusIndex).requestFocus();
+        final int pinIdx = rows.getChildCount();
+        addSettingsMenuTextRow(rows, popup, "修改家长密码", false, () -> {
+            ScreenTime.showChangePinDialog(this);
+            populateScreenTimeRows(rows, popup, pkg, label, pinIdx);
+        });
+        addSettingsMenuTextRow(rows, popup, "完成 / 关闭", true, () -> { });
+        if (focusIndex >= 0 && focusIndex < rows.getChildCount()) {
+            rows.getChildAt(focusIndex).requestFocus();
+        }
     }
 
     private void addSettingsMenuRow(LinearLayout rows, PopupWindow popup, int title, Runnable action) {
-        addSettingsMenuTextRow(rows, popup, getString(title), action);
+        addSettingsMenuTextRow(rows, popup, getString(title), true, action);
     }
 
     private void addSettingsMenuTextRow(LinearLayout rows, PopupWindow popup, String title, Runnable action) {
+        addSettingsMenuTextRow(rows, popup, title, true, action);
+    }
+
+    private void addSettingsMenuTextRow(LinearLayout rows, PopupWindow popup, String title,
+                                        boolean dismissOnClick, Runnable action) {
         View row = getLayoutInflater().inflate(R.layout.item_input, rows, false);
         row.findViewById(R.id.icon).setVisibility(View.GONE);
         row.findViewById(R.id.dot).setVisibility(View.GONE);
         row.findViewById(R.id.status).setVisibility(View.GONE);
         ((TextView) row.findViewById(R.id.title)).setText(title);
         row.setOnClickListener(v -> {
-            popup.dismiss();
+            if (dismissOnClick) popup.dismiss();
             action.run();
         });
         // The OK-up after opening the menu must not activate its first row.
@@ -3965,7 +4003,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             boolean activate = pressed[0];
             pressed[0] = false;
             if (activate) {
-                popup.dismiss();
+                if (dismissOnClick) popup.dismiss();
                 action.run();
             }
             return true;
