@@ -179,7 +179,7 @@ final class ScreenTime {
     static void setGoBonusMinutes(Context ctx, int minutes) {
         for (int opt : GO_BONUS_MINUTES_OPTIONS) {
             if (minutes == opt) {
-                prefs(ctx).edit().putInt(KEY_GO_BONUS_MINUTES, minutes).apply();
+                prefs(ctx).edit().putInt(KEY_GO_BONUS_MINUTES, minutes).commit();
                 return;
             }
         }
@@ -411,6 +411,7 @@ final class ScreenTime {
             final int opt = GO_BONUS_MINUTES_OPTIONS[i];
             bonusBtns[i] = makeActionButton(activity, density, "", () -> {
                 selectedMinutes[0] = opt;
+                setGoBonusMinutes(activity, opt);
                 refreshBonusBtns.run();
             });
             LinearLayout.LayoutParams optLp = new LinearLayout.LayoutParams(0, dp(density, 42), 1f);

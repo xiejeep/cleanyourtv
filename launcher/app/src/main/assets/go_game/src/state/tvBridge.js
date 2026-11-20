@@ -11,6 +11,15 @@ export function isTvUnlockMode() {
 }
 
 export function getTvBonusMinutes() {
+  const bridge = getBridge();
+  if (bridge && typeof bridge.getBonusMinutes === 'function') {
+    try {
+      const m = Number(bridge.getBonusMinutes());
+      if (Number.isFinite(m) && m > 0) return m;
+    } catch {
+      // fallback below
+    }
+  }
   if (typeof window === 'undefined') return 30;
   const raw = Number(new URLSearchParams(window.location.search).get('bonusMin'));
   return Number.isFinite(raw) && raw > 0 ? raw : 30;

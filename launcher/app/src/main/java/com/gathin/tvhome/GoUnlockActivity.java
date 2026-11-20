@@ -293,6 +293,11 @@ public final class GoUnlockActivity extends Activity {
 
     private final class TvUnlockBridge {
         @JavascriptInterface
+        public int getBonusMinutes() {
+            return ScreenTime.getGoBonusMinutes(GoUnlockActivity.this);
+        }
+
+        @JavascriptInterface
         public String getRewardedLevelIds() {
             return new JSONArray(ScreenTime.getRewardedLevels(GoUnlockActivity.this)).toString();
         }
