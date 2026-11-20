@@ -545,6 +545,9 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         if (!cfg.dockTitle) hero.setVisibility(View.GONE);
         greeting = findViewById(R.id.greeting);
         clockBlock = findViewById(R.id.leftBlock);
+        if (clockBlock.getBackground() != null) {
+            clockBlock.getBackground().mutate().setAlpha(Math.round(Config.getClockBgOpacity(this) * 255f / 100f));
+        }
         clockRefresh = new ClockRefresh(clockBlock);
         greetingColor = greeting.getCurrentTextColor();
         if (!cfg.showGreeting) greeting.setVisibility(View.GONE);

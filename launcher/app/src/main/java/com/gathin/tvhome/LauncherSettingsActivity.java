@@ -34,6 +34,8 @@ public final class LauncherSettingsActivity extends Activity {
     private final TextView[] dockChoices = new TextView[DOCK_OPACITIES.length];
     private static final int[] TILE_OPACITIES = {100, 70, 50, 30, 0};
     private final TextView[] tileChoices = new TextView[TILE_OPACITIES.length];
+    private static final int[] CLOCK_BG_OPACITIES = {100, 70, 50, 30, 0};
+    private final TextView[] clockBgChoices = new TextView[CLOCK_BG_OPACITIES.length];
     private static final String[] CLOCK_FORMATS = {"system", "12", "24"};
     private final TextView[] clockChoices = new TextView[CLOCK_FORMATS.length];
     private TextView wallpaperChoice;
@@ -45,6 +47,7 @@ public final class LauncherSettingsActivity extends Activity {
     private int rowsBelowDock;
     private int dockOpacity;
     private int tileOpacity;
+    private int clockBgOpacity;
     private String clockFormat;
     private boolean animations;
     private boolean advancedEffects;
@@ -65,6 +68,7 @@ public final class LauncherSettingsActivity extends Activity {
         rowsBelowDock = config.rowsBelowDock;
         dockOpacity = config.dockOpacity;
         tileOpacity = Config.getTileOpacity(this);
+        clockBgOpacity = Config.getClockBgOpacity(this);
         clockFormat = config.clockFormat;
         animations = config.animations;
         advancedEffects = config.animations && config.advancedEffects;
@@ -117,6 +121,18 @@ public final class LauncherSettingsActivity extends Activity {
                 refresh();
             });
         }
+        int[] clockBgIds = {R.id.clockBg100, R.id.clockBg70, R.id.clockBg50, R.id.clockBg30, R.id.clockBg0};
+        for (int i = 0; i < clockBgIds.length; i++) {
+            final int value = CLOCK_BG_OPACITIES[i];
+            clockBgChoices[i] = findViewById(clockBgIds[i]);
+            clockBgChoices[i].setOnClickListener(v -> {
+                if (clockBgOpacity == value) return;
+                clockBgOpacity = value;
+                choices.edit().putInt(Config.CLOCK_BG_OPACITY_KEY, value).apply();
+                changed();
+                refresh();
+            });
+        }
         int[] clockIds = {R.id.clockSystem, R.id.clock12, R.id.clock24};
         for (int i = 0; i < clockIds.length; i++) {
             final String value = CLOCK_FORMATS[i];
@@ -137,6 +153,8 @@ public final class LauncherSettingsActivity extends Activity {
             reverseRow(columnChoices);
             reverseRow(rowChoices);
             reverseRow(dockChoices);
+            reverseRow(tileChoices);
+            reverseRow(clockBgChoices);
             reverseRow(clockChoices);
         }
         wallpaperChoice = findViewById(R.id.wallpaperChoice);
@@ -173,12 +191,13 @@ public final class LauncherSettingsActivity extends Activity {
             if (!hasOnTvChoices()) return;
             choices.edit().remove("columns").remove(Config.ROWS_BELOW_DOCK_KEY).remove("animations")
                     .remove("advanced_effects").remove(Config.WALLPAPER_CHOICE_KEY)
-                    .remove(Config.DOCK_OPACITY_KEY).remove(Config.TILE_OPACITY_KEY).remove(Config.CLOCK_FORMAT_KEY).remove(OpenOnStart.KEY).commit();
+                    .remove(Config.DOCK_OPACITY_KEY).remove(Config.TILE_OPACITY_KEY).remove(Config.CLOCK_BG_OPACITY_KEY).remove(Config.CLOCK_FORMAT_KEY).remove(OpenOnStart.KEY).commit();
             Config current = Config.load(this);
             columns = current.columns;
             rowsBelowDock = current.rowsBelowDock;
             dockOpacity = current.dockOpacity;
             tileOpacity = Config.getTileOpacity(this);
+            clockBgOpacity = Config.getClockBgOpacity(this);
             clockFormat = current.clockFormat;
             animations = current.animations;
             advancedEffects = current.animations && current.advancedEffects;
@@ -323,6 +342,9 @@ public final class LauncherSettingsActivity extends Activity {
         for (int i = 0; i < tileChoices.length; i++) {
             tileChoices[i].setSelected(tileOpacity == TILE_OPACITIES[i]);
         }
+        for (int i = 0; i < clockBgChoices.length; i++) {
+            clockBgChoices[i].setSelected(clockBgOpacity == CLOCK_BG_OPACITIES[i]);
+        }
         for (int i = 0; i < clockChoices.length; i++) {
             clockChoices[i].setSelected(CLOCK_FORMATS[i].equals(clockFormat));
         }
@@ -346,6 +368,7 @@ public final class LauncherSettingsActivity extends Activity {
                 || choices.contains("animations") || choices.contains("advanced_effects")
                 || choices.contains(Config.WALLPAPER_CHOICE_KEY) || choices.contains(Config.DOCK_OPACITY_KEY)
                 || choices.contains(Config.TILE_OPACITY_KEY)
+                || choices.contains(Config.CLOCK_BG_OPACITY_KEY)
                 || choices.contains(Config.CLOCK_FORMAT_KEY) || choices.contains(OpenOnStart.KEY);
     }
 
