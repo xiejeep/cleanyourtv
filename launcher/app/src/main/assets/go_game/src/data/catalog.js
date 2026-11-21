@@ -1,9 +1,9 @@
 export const UNITS = [
   {
     id: 1,
-    title: '第 1 单元：气与吃子大冒险',
-    subtitle: '认识棋子的呼吸，一口吃掉小对手！',
-    badge: 'UNIT 1 · 5×5 / 7×7',
+    title: '第 1 单元：气与提子（101 基础练习）',
+    subtitle: '精选 101 入门基础练习：认识“气”的形状与实战提子！',
+    badge: 'UNIT 1 · 101 基础 · 5×5 / 7×7',
   },
   {
     id: 2,
@@ -23,26 +23,26 @@ export const NODES = [
   {
     id: '1.1',
     unitId: 1,
-    title: '棋子的呼吸',
-    shortDesc: '认识“气”在哪里，找出只剩一口气发抖的棋子',
+    title: '101 基础知识 · 气',
+    shortDesc: '101 入门篇 12 题：数清中间、边角与连块黑棋的所有气',
     icon: '🫧',
     badgeId: 'badge-1-1',
     sessions: [
-      { id: '1.1-s1', title: '第 1 节：数一数有几口气', levelRange: [0, 6] },
-      { id: '1.1-s2', title: '第 2 节：谁在发抖快帮忙', levelRange: [6, 12] },
+      { id: '1.1-s1', title: '第 1 节：单子与小连块的气（1–6 题）', levelRange: [0, 6] },
+      { id: '1.1-s2', title: '第 2 节：多子形状与边角气（7–12 题）', levelRange: [6, 12] },
     ],
   },
   {
     id: '1.2',
     unitId: 1,
-    title: '一口吃掉你',
-    shortDesc: '堵住最后一口气，把对方棋子变成你的战利品',
+    title: '101 基础知识 · 提子',
+    shortDesc: '101 入门篇 12 题 + 3 题巩固：找出最后一口气提掉白棋',
     icon: '😋',
     badgeId: 'badge-1-2',
     sessions: [
-      { id: '1.2-s1', title: '第 1 节：一口吃掉单颗子', levelRange: [0, 5] },
-      { id: '1.2-s2', title: '第 2 节：找出真假一口气', levelRange: [5, 10] },
-      { id: '1.2-s3', title: '第 3 节：2 步追吃大作战', levelRange: [10, 15] },
+      { id: '1.2-s1', title: '第 1 节：101 提子第 1–5 题', levelRange: [0, 5] },
+      { id: '1.2-s2', title: '第 2 节：101 提子第 6–10 题', levelRange: [5, 10] },
+      { id: '1.2-s3', title: '第 3 节：101 提子第 11–12 题与强化', levelRange: [10, 15] },
     ],
   },
   {
