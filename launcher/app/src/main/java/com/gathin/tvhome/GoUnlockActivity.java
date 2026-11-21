@@ -77,6 +77,7 @@ public final class GoUnlockActivity extends Activity {
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
         settings.setCacheMode(WebSettings.LOAD_NO_CACHE);
+        settings.setMediaPlaybackRequiresUserGesture(false);
         settings.setUseWideViewPort(true);
         settings.setLoadWithOverviewMode(true);
         webView.addJavascriptInterface(new TvUnlockBridge(), "TvUnlockBridge");
@@ -178,6 +179,7 @@ public final class GoUnlockActivity extends Activity {
         if (lower.endsWith(".png")) return "image/png";
         if (lower.endsWith(".webp")) return "image/webp";
         if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "image/jpeg";
+        if (lower.endsWith(".mp3")) return "audio/mpeg";
         return "application/octet-stream";
     }
 

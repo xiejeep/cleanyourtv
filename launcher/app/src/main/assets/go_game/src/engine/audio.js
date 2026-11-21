@@ -1,8 +1,11 @@
+import { AUDIO_MANIFEST } from '../data/audioManifest.js';
+
 class SoundEngine {
   constructor() {
     this.ctx = null;
     this.soundEnabled = true;
     this.ttsEnabled = true;
+    this.currentAudio = null;
   }
 
   setConfig({ soundEnabled, ttsEnabled }) {
@@ -96,9 +99,30 @@ class SoundEngine {
   }
 
   speak(text) {
-    if (!this.ttsEnabled || !text || typeof window === 'undefined' || !('speechSynthesis' in window)) {
+    if (!this.ttsEnabled || !text || typeof window === 'undefined') {
       return;
     }
+    const key = String(text).trim();
+    const audioUrl = AUDIO_MANIFEST[key];
+    this.stopSpeech();
+    if (audioUrl && typeof Audio !== 'undefined') {
+      try {
+        const audio = new Audio(audioUrl);
+        this.currentAudio = audio;
+        const p = audio.play();
+        if (p && typeof p.catch === 'function') {
+          p.catch(() => this.speakFallback(key));
+        }
+        return;
+      } catch {
+        // fallback below
+      }
+    }
+    this.speakFallback(key);
+  }
+
+  speakFallback(text) {
+    if (!('speechSynthesis' in window)) return;
     try {
       window.speechSynthesis.cancel();
       const utter = new SpeechSynthesisUtterance(text);
@@ -115,6 +139,15 @@ class SoundEngine {
   }
 
   stopSpeech() {
+    if (this.currentAudio) {
+      try {
+        this.currentAudio.pause();
+        this.currentAudio.currentTime = 0;
+      } catch {
+        // ignore
+      }
+      this.currentAudio = null;
+    }
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       try {
         window.speechSynthesis.cancel();
